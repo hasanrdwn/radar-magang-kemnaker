@@ -209,6 +209,7 @@
 
 <div class="controls">
   <input type="text" id="searchInput" placeholder="Cari posisi, bidang, atau instansi...">
+  <select id="jurusanFilter"><option value="">Semua jurusan</option></select>
   <select id="locFilter"><option value="">Semua lokasi</option></select>
   <select id="sortSelect">
     <option value="default">Urutan default</option>
@@ -244,6 +245,18 @@ let filtered = [];
 let currentPage = 1;
 const PER_PAGE = 30;
 
+const JURUSAN_LIST = [
+  'Psikologi','Manajemen','Akuntansi','Administrasi','Hukum','Ekonomi',
+  'Teknik Informatika','Ilmu Komputer','Sistem Informasi','Teknik Sipil',
+  'Teknik Elektro','Teknik Mesin','Teknik Industri','Teknik Lingkungan',
+  'Arsitektur','Pertanian','Agribisnis','Peternakan','Perikanan','Kehutanan',
+  'Kedokteran','Keperawatan','Kesehatan Masyarakat','Farmasi','Gizi',
+  'Komunikasi','Desain Komunikasi Visual','Multimedia','Sastra','Bahasa',
+  'Pendidikan','Statistik','Matematika','Fisika','Kimia','Biologi',
+  'Geologi','Geografi','Pariwisata','Perhotelan','Tata Boga','Sosiologi',
+  'Ilmu Politik','Hubungan Internasional','Perpajakan','Perbankan','Kearsipan'
+];
+
 async function init(){
   try{
     const res = await fetch('data.json');
@@ -269,7 +282,15 @@ async function init(){
     locSelect.appendChild(opt);
   });
 
+  const jurusanSelect = document.getElementById('jurusanFilter');
+  JURUSAN_LIST.forEach(j=>{
+    const opt = document.createElement('option');
+    opt.value = j.toLowerCase(); opt.textContent = j;
+    jurusanSelect.appendChild(opt);
+  });
+
   document.getElementById('searchInput').addEventListener('input', ()=>{currentPage=1; applyFilters();});
+  document.getElementById('jurusanFilter').addEventListener('change', ()=>{currentPage=1; applyFilters();});
   document.getElementById('locFilter').addEventListener('change', ()=>{currentPage=1; applyFilters();});
   document.getElementById('sortSelect').addEventListener('change', ()=>{currentPage=1; applyFilters();});
 
@@ -278,11 +299,13 @@ async function init(){
 
 function applyFilters(){
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const jurusan = document.getElementById('jurusanFilter').value;
   const loc = document.getElementById('locFilter').value;
   const sort = document.getElementById('sortSelect').value;
 
   filtered = ALL_JOBS.filter(j=>{
     if(loc && j.location !== loc) return false;
+    if(jurusan && !(j.search_text || '').includes(jurusan)) return false;
     if(q && !(j.search_text || '').includes(q)) return false;
     return true;
   });
