@@ -14,6 +14,8 @@
     --text-dim: #8b92a8;
     --accent: #3b82f6;
     --accent-2: #22c55e;
+    --accent-3: #f59e0b;
+    --accent-4: #a855f7;
     --radius: 10px;
   }
   *{box-sizing:border-box;}
@@ -26,12 +28,16 @@
   header{
     padding:28px 24px 20px;
     border-bottom:1px solid var(--border);
-    background:linear-gradient(180deg, var(--panel-2), var(--bg));
+    background:linear-gradient(135deg, #1a2a4a, #0b0e14 70%);
   }
   header h1{
     margin:0 0 4px;
     font-size:24px;
     font-weight:700;
+    background:linear-gradient(90deg, #60a5fa, #a855f7);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
   }
   header p{
     margin:0;
@@ -91,19 +97,26 @@
   .card{
     background:var(--panel);
     border:1px solid var(--border);
+    border-left:3px solid var(--accent);
     border-radius:var(--radius);
     padding:16px;
     display:flex;
     flex-direction:column;
-    gap:8px;
-    transition:border-color .15s;
+    gap:6px;
+    transition:border-color .15s, transform .15s;
   }
-  .card:hover{border-color:var(--accent);}
+  .card:hover{border-color:var(--accent);transform:translateY(-2px);}
   .card h3{
     margin:0;
     font-size:15px;
-    font-weight:600;
+    font-weight:700;
     line-height:1.35;
+    color:#fff;
+  }
+  .card .instansi{
+    font-size:13px;
+    color:var(--accent-3);
+    font-weight:600;
   }
   .card .fields{
     font-size:12px;
@@ -114,7 +127,7 @@
     display:flex;
     flex-wrap:wrap;
     gap:6px;
-    margin-top:4px;
+    margin-top:6px;
   }
   .badge{
     font-size:11px;
@@ -124,19 +137,21 @@
     border:1px solid var(--border);
     color:var(--text-dim);
   }
-  .badge.kuota{color:var(--accent-2);border-color:#22c55e33;}
+  .badge.loc{color:#60a5fa;border-color:#3b82f633;}
+  .badge.kuota{color:var(--accent-2);border-color:#22c55e33;font-weight:700;}
+  .badge.edu{color:var(--accent-4);border-color:#a855f733;}
   .card a.btn{
-    margin-top:auto;
+    margin-top:10px;
     text-align:center;
     text-decoration:none;
     color:#fff;
-    background:var(--accent);
-    padding:8px 12px;
+    background:linear-gradient(90deg, var(--accent), var(--accent-4));
+    padding:9px 12px;
     border-radius:8px;
     font-size:13px;
-    font-weight:600;
+    font-weight:700;
   }
-  .card a.btn:hover{opacity:.9;}
+  .card a.btn:hover{opacity:.88;}
 
   .pagination{
     display:flex;
@@ -338,11 +353,12 @@ function render(){
   grid.innerHTML = pageItems.map(j => `
     <div class="card">
       <h3>${escapeHtml(j.title)}</h3>
-      <div class="fields">${escapeHtml(j.instansi_bidang)}</div>
+      <div class="instansi">${escapeHtml(j.instansi)}</div>
+      ${j.bidang ? `<div class="fields">${escapeHtml(j.bidang)}</div>` : ''}
       <div class="meta">
-        ${j.location ? `<span class="badge">📍 ${escapeHtml(j.location)}</span>` : ''}
+        ${j.location ? `<span class="badge loc">📍 ${escapeHtml(j.location)}</span>` : ''}
         ${j.kuota ? `<span class="badge kuota">${j.kuota} kuota</span>` : ''}
-        ${j.pendidikan ? `<span class="badge">${escapeHtml(j.pendidikan)}</span>` : ''}
+        ${j.pendidikan ? `<span class="badge edu">${escapeHtml(j.pendidikan)}</span>` : ''}
         ${j.hari_kerja ? `<span class="badge">${j.hari_kerja} hari/minggu</span>` : ''}
       </div>
       <a class="btn" href="${j.href}" target="_blank" rel="noopener">Lihat Detail →</a>
