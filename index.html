@@ -103,6 +103,12 @@
     overflow-y:auto;
     overflow-x:hidden;
     box-shadow:0 8px 24px rgba(0,0,0,.4);
+    box-sizing:border-box;
+  }
+  .dropdown-panel #locCheckList,
+  .dropdown-panel #eduCheckList{
+    width:100%;
+    box-sizing:border-box;
   }
   .dropdown-panel.open{display:block;}
   .dropdown-panel input[type=text]{
@@ -119,13 +125,17 @@
     font-size:13px;
     cursor:pointer;
     border-radius:6px;
+  }
+  .dropdown-panel label input[type=checkbox]{
+    flex:0 0 auto;
+    margin-top:2px;
+  }
+  .dropdown-panel label span.opt-text{
+    flex:1 1 auto;
+    min-width:0;
     white-space:normal;
     word-break:break-word;
     line-height:1.35;
-  }
-  .dropdown-panel label input[type=checkbox]{
-    flex-shrink:0;
-    margin-top:2px;
   }
   .dropdown-panel label:hover{background:var(--panel-2);}
   .dropdown-panel .actions-row{
@@ -467,7 +477,7 @@ function buildLocCheckboxes(locs){
   wrap.innerHTML = locs.map(l => `
     <label data-loc="${escapeHtml(l.toLowerCase())}">
       <input type="checkbox" value="${escapeHtml(l)}" onchange="onLocCheck(this)">
-      ${escapeHtml(l)}
+      <span class="opt-text">${escapeHtml(l)}</span>
     </label>
   `).join('');
 }
@@ -477,7 +487,7 @@ function buildEduCheckboxes(){
   wrap.innerHTML = EDU_LIST.map(e => `
     <label>
       <input type="checkbox" value="${e}" onchange="onEduCheck(this)">
-      ${e}
+      <span class="opt-text">${e}</span>
     </label>
   `).join('');
 }
