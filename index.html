@@ -16,6 +16,7 @@
     --accent-2: #22c55e;
     --accent-3: #f59e0b;
     --accent-4: #a855f7;
+    --danger: #ef4444;
     --radius: 10px;
   }
   *{box-sizing:border-box;}
@@ -64,20 +65,78 @@
     margin:20px auto 0;
     padding:0 24px;
     display:flex;
-    gap:12px;
+    gap:10px;
     flex-wrap:wrap;
+    align-items:flex-start;
+    position:relative;
   }
-  .controls input, .controls select{
+  .controls input, .controls select, .dropdown-btn, .action-btn{
     background:var(--panel);
     border:1px solid var(--border);
     color:var(--text);
     padding:10px 14px;
     border-radius:var(--radius);
     font-size:14px;
+    cursor:pointer;
   }
-  .controls input{flex:1;min-width:220px;}
-  .controls select{min-width:180px;}
+  .controls input{flex:1;min-width:220px;cursor:text;}
+  .controls select{min-width:160px;}
   .controls input:focus, .controls select:focus{outline:1px solid var(--accent);}
+
+  .dropdown-wrap{position:relative;}
+  .dropdown-btn{white-space:nowrap;}
+  .dropdown-btn.has-selection{border-color:var(--accent);color:var(--accent);}
+  .dropdown-panel{
+    display:none;
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    z-index:20;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:10px;
+    width:280px;
+    max-height:340px;
+    overflow-y:auto;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .dropdown-panel.open{display:block;}
+  .dropdown-panel input[type=text]{
+    width:100%;
+    margin-bottom:8px;
+    padding:8px 10px;
+    font-size:13px;
+  }
+  .dropdown-panel label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 4px;
+    font-size:13px;
+    cursor:pointer;
+    border-radius:6px;
+  }
+  .dropdown-panel label:hover{background:var(--panel-2);}
+  .dropdown-panel .actions-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px solid var(--border);
+  }
+  .dropdown-panel .actions-row button{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-size:12px;
+    cursor:pointer;
+    padding:4px;
+  }
+
+  .action-btn{font-weight:600;}
+  .action-btn.fav-toggle.active{background:var(--accent-3);color:#1a1300;border-color:var(--accent-3);}
+  .action-btn.export{color:var(--accent-2);}
 
   main{
     max-width:1200px;
@@ -88,6 +147,10 @@
     color:var(--text-dim);
     font-size:13px;
     margin-bottom:14px;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
   }
   .grid{
     display:grid;
@@ -104,8 +167,16 @@
     flex-direction:column;
     gap:6px;
     transition:border-color .15s, transform .15s;
+    position:relative;
   }
   .card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .card.viewed{opacity:.62;}
+  .card .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
   .card h3{
     margin:0;
     font-size:15px;
@@ -113,6 +184,18 @@
     line-height:1.35;
     color:#fff;
   }
+  .star-btn{
+    background:none;
+    border:none;
+    font-size:20px;
+    cursor:pointer;
+    line-height:1;
+    padding:0;
+    flex-shrink:0;
+    filter:grayscale(1);
+    opacity:.5;
+  }
+  .star-btn.active{filter:none;opacity:1;}
   .card .instansi{
     font-size:13px;
     color:var(--accent-3);
@@ -140,6 +223,8 @@
   .badge.loc{color:#60a5fa;border-color:#3b82f633;}
   .badge.kuota{color:var(--accent-2);border-color:#22c55e33;font-weight:700;}
   .badge.edu{color:var(--accent-4);border-color:#a855f733;}
+  .badge.ketat{color:var(--danger);border-color:#ef444433;}
+  .badge.luas{color:var(--accent-2);border-color:#22c55e33;}
   .card a.btn{
     margin-top:10px;
     text-align:center;
@@ -182,7 +267,7 @@
 
   details.help{
     max-width:1200px;
-    margin:0 auto 20px;
+    margin:16px auto 0;
     padding:0 24px;
   }
   details.help summary{
@@ -219,19 +304,54 @@
     <div class="stat"><div class="num" id="statTotal">-</div><div class="label">Total lowongan</div></div>
     <div class="stat"><div class="num" id="statLoc">-</div><div class="label">Lokasi berbeda</div></div>
     <div class="stat"><div class="num" id="statKuota">-</div><div class="label">Total kuota</div></div>
+    <div class="stat"><div class="num" id="statFav">-</div><div class="label">Favorit disimpan</div></div>
   </div>
 </header>
 
 <div class="controls">
   <input type="text" id="searchInput" placeholder="Cari posisi, bidang, atau instansi...">
   <select id="jurusanFilter"><option value="">Semua jurusan</option></select>
-  <select id="locFilter"><option value="">Semua lokasi</option></select>
+
+  <div class="dropdown-wrap">
+    <button class="dropdown-btn" id="locBtn" onclick="toggleDropdown('locPanel')">📍 Lokasi ▾</button>
+    <div class="dropdown-panel" id="locPanel">
+      <input type="text" id="locSearchBox" placeholder="Cari kota/kabupaten...">
+      <div id="locCheckList"></div>
+      <div class="actions-row">
+        <button onclick="clearSelection('loc')">Bersihkan</button>
+        <button onclick="toggleDropdown('locPanel')">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dropdown-wrap">
+    <button class="dropdown-btn" id="eduBtn" onclick="toggleDropdown('eduPanel')">🎓 Pendidikan ▾</button>
+    <div class="dropdown-panel" id="eduPanel">
+      <div id="eduCheckList"></div>
+      <div class="actions-row">
+        <button onclick="clearSelection('edu')">Bersihkan</button>
+        <button onclick="toggleDropdown('eduPanel')">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <select id="kuotaMinFilter">
+    <option value="0">Kuota berapapun</option>
+    <option value="1">Kuota ≥ 1</option>
+    <option value="3">Kuota ≥ 3</option>
+    <option value="5">Kuota ≥ 5</option>
+    <option value="10">Kuota ≥ 10</option>
+  </select>
+
   <select id="sortSelect">
     <option value="default">Urutan default</option>
     <option value="kuota_desc">Kuota terbanyak</option>
     <option value="kuota_asc">Kuota tersedikit</option>
     <option value="title_asc">Nama A-Z</option>
   </select>
+
+  <button class="action-btn fav-toggle" id="favToggleBtn" onclick="toggleFavView()">⭐ Favorit Saja</button>
+  <button class="action-btn export" onclick="exportCsv()">⬇ Export CSV</button>
 </div>
 
 <details class="help">
@@ -245,11 +365,14 @@
       <li>Tunggu sampai selesai, file akan otomatis ke-download</li>
       <li>Rename file hasil download jadi <code>data.json</code>, lalu upload/timpa ke repo GitHub kamu</li>
     </ol>
+    Favorit dan riwayat "sudah dilihat" tersimpan di browser kamu sendiri (localStorage), jadi tidak akan hilang walau data.json di-update, tapi tidak ikut ter-sync kalau buka dari HP/laptop lain.
   </div>
 </details>
 
 <main>
-  <div class="result-info" id="resultInfo">Memuat data...</div>
+  <div class="result-info">
+    <span id="resultInfo">Memuat data...</span>
+  </div>
   <div class="grid" id="grid"></div>
   <div class="pagination" id="pagination"></div>
 </main>
@@ -259,6 +382,13 @@ let ALL_JOBS = [];
 let filtered = [];
 let currentPage = 1;
 const PER_PAGE = 30;
+
+let selectedLocs = new Set();
+let selectedEdu = new Set();
+let showFavOnly = false;
+
+let favorites = new Set(JSON.parse(localStorage.getItem('mh_favorites') || '[]'));
+let viewed = new Set(JSON.parse(localStorage.getItem('mh_viewed') || '[]'));
 
 const JURUSAN_LIST = [
   'Psikologi','Manajemen','Akuntansi','Administrasi','Hukum','Ekonomi',
@@ -271,12 +401,16 @@ const JURUSAN_LIST = [
   'Geologi','Geografi','Pariwisata','Perhotelan','Tata Boga','Sosiologi',
   'Ilmu Politik','Hubungan Internasional','Perpajakan','Perbankan','Kearsipan'
 ];
+const EDU_LIST = ['Sarjana','Diploma','Profesi'];
 
 async function init(){
   try{
     const res = await fetch('data.json');
     if(!res.ok) throw new Error('HTTP '+res.status);
     ALL_JOBS = await res.json();
+    ALL_JOBS.forEach(j=>{
+      j.search_text = (j.title + ' ' + j.instansi + ' ' + (j.bidang||'') + ' ' + j.location + ' ' + (j.pendidikan||'')).toLowerCase();
+    });
   }catch(e){
     document.getElementById('grid').innerHTML =
       '<div class="empty">Gagal memuat data.json. Pastikan file itu ada di folder yang sama dengan index.html.<br><small>'+e.message+'</small></div>';
@@ -289,13 +423,7 @@ async function init(){
   document.getElementById('statLoc').textContent = locs.length.toLocaleString('id-ID');
   const totalKuota = ALL_JOBS.reduce((s,j)=> s + (j.kuota||0), 0);
   document.getElementById('statKuota').textContent = totalKuota.toLocaleString('id-ID');
-
-  const locSelect = document.getElementById('locFilter');
-  locs.forEach(l=>{
-    const opt = document.createElement('option');
-    opt.value = l; opt.textContent = l;
-    locSelect.appendChild(opt);
-  });
+  document.getElementById('statFav').textContent = favorites.size.toLocaleString('id-ID');
 
   const jurusanSelect = document.getElementById('jurusanFilter');
   JURUSAN_LIST.forEach(j=>{
@@ -304,22 +432,129 @@ async function init(){
     jurusanSelect.appendChild(opt);
   });
 
+  buildLocCheckboxes(locs);
+  buildEduCheckboxes();
+
   document.getElementById('searchInput').addEventListener('input', ()=>{currentPage=1; applyFilters();});
   document.getElementById('jurusanFilter').addEventListener('change', ()=>{currentPage=1; applyFilters();});
-  document.getElementById('locFilter').addEventListener('change', ()=>{currentPage=1; applyFilters();});
+  document.getElementById('kuotaMinFilter').addEventListener('change', ()=>{currentPage=1; applyFilters();});
   document.getElementById('sortSelect').addEventListener('change', ()=>{currentPage=1; applyFilters();});
+  document.getElementById('locSearchBox').addEventListener('input', filterLocCheckboxes);
+
+  document.addEventListener('click', (e)=>{
+    document.querySelectorAll('.dropdown-panel.open').forEach(panel=>{
+      if(!panel.contains(e.target) && !panel.previousElementSibling.contains(e.target)){
+        panel.classList.remove('open');
+      }
+    });
+  });
 
   applyFilters();
+}
+
+function buildLocCheckboxes(locs){
+  const wrap = document.getElementById('locCheckList');
+  wrap.innerHTML = locs.map(l => `
+    <label data-loc="${escapeHtml(l.toLowerCase())}">
+      <input type="checkbox" value="${escapeHtml(l)}" onchange="onLocCheck(this)">
+      ${escapeHtml(l)}
+    </label>
+  `).join('');
+}
+
+function buildEduCheckboxes(){
+  const wrap = document.getElementById('eduCheckList');
+  wrap.innerHTML = EDU_LIST.map(e => `
+    <label>
+      <input type="checkbox" value="${e}" onchange="onEduCheck(this)">
+      ${e}
+    </label>
+  `).join('');
+}
+
+function filterLocCheckboxes(){
+  const q = document.getElementById('locSearchBox').value.trim().toLowerCase();
+  document.querySelectorAll('#locCheckList label').forEach(lbl=>{
+    lbl.style.display = lbl.dataset.loc.includes(q) ? '' : 'none';
+  });
+}
+
+function onLocCheck(el){
+  if(el.checked) selectedLocs.add(el.value); else selectedLocs.delete(el.value);
+  updateDropdownBtnState('locBtn', selectedLocs.size, '📍 Lokasi');
+  currentPage = 1;
+  applyFilters();
+}
+
+function onEduCheck(el){
+  if(el.checked) selectedEdu.add(el.value); else selectedEdu.delete(el.value);
+  updateDropdownBtnState('eduBtn', selectedEdu.size, '🎓 Pendidikan');
+  currentPage = 1;
+  applyFilters();
+}
+
+function updateDropdownBtnState(btnId, count, label){
+  const btn = document.getElementById(btnId);
+  btn.textContent = count > 0 ? `${label} (${count}) ▾` : `${label} ▾`;
+  btn.classList.toggle('has-selection', count > 0);
+}
+
+function toggleDropdown(panelId){
+  const panel = document.getElementById(panelId);
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.dropdown-panel.open').forEach(p=>p.classList.remove('open'));
+  if(!isOpen) panel.classList.add('open');
+}
+
+function clearSelection(type){
+  if(type === 'loc'){
+    selectedLocs.clear();
+    document.querySelectorAll('#locCheckList input').forEach(c=>c.checked=false);
+    updateDropdownBtnState('locBtn', 0, '📍 Lokasi');
+  } else if(type === 'edu'){
+    selectedEdu.clear();
+    document.querySelectorAll('#eduCheckList input').forEach(c=>c.checked=false);
+    updateDropdownBtnState('eduBtn', 0, '🎓 Pendidikan');
+  }
+  currentPage = 1;
+  applyFilters();
+}
+
+function toggleFavView(){
+  showFavOnly = !showFavOnly;
+  document.getElementById('favToggleBtn').classList.toggle('active', showFavOnly);
+  currentPage = 1;
+  applyFilters();
+}
+
+function toggleFavorite(href){
+  if(favorites.has(href)) favorites.delete(href); else favorites.add(href);
+  localStorage.setItem('mh_favorites', JSON.stringify([...favorites]));
+  document.getElementById('statFav').textContent = favorites.size.toLocaleString('id-ID');
+  render();
+}
+
+function markViewed(href){
+  if(!viewed.has(href)){
+    viewed.add(href);
+    localStorage.setItem('mh_viewed', JSON.stringify([...viewed]));
+  }
 }
 
 function applyFilters(){
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   const jurusan = document.getElementById('jurusanFilter').value;
-  const loc = document.getElementById('locFilter').value;
+  const kuotaMin = parseInt(document.getElementById('kuotaMinFilter').value) || 0;
   const sort = document.getElementById('sortSelect').value;
 
   filtered = ALL_JOBS.filter(j=>{
-    if(loc && j.location !== loc) return false;
+    if(showFavOnly && !favorites.has(j.href)) return false;
+    if(selectedLocs.size > 0 && !selectedLocs.has(j.location)) return false;
+    if(selectedEdu.size > 0){
+      const eduMatch = [...selectedEdu].some(e => (j.pendidikan||'').includes(e));
+      if(!eduMatch) return false;
+    }
+    if(kuotaMin > 0 && (j.kuota||0) < kuotaMin) return false;
     if(jurusan && !(j.search_text || '').includes(jurusan)) return false;
     if(q && !(j.search_text || '').includes(q)) return false;
     return true;
@@ -342,7 +577,7 @@ function render(){
 
   const grid = document.getElementById('grid');
   if(total === 0){
-    grid.innerHTML = '<div class="empty">Tidak ada lowongan yang cocok dengan pencarian.</div>';
+    grid.innerHTML = '<div class="empty">Tidak ada lowongan yang cocok dengan filter kamu.</div>';
     document.getElementById('pagination').innerHTML = '';
     return;
   }
@@ -350,9 +585,17 @@ function render(){
   const start = (currentPage-1)*PER_PAGE;
   const pageItems = filtered.slice(start, start+PER_PAGE);
 
-  grid.innerHTML = pageItems.map(j => `
-    <div class="card">
-      <h3>${escapeHtml(j.title)}</h3>
+  grid.innerHTML = pageItems.map(j => {
+    const isFav = favorites.has(j.href);
+    const isViewed = viewed.has(j.href);
+    const peluang = j.kuota <= 2 ? '<span class="badge ketat">🔥 Peluang Ketat</span>'
+                  : j.kuota >= 10 ? '<span class="badge luas">✓ Peluang Luas</span>' : '';
+    return `
+    <div class="card ${isViewed ? 'viewed' : ''}">
+      <div class="top-row">
+        <h3>${escapeHtml(j.title)}</h3>
+        <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${j.href}')" title="Simpan sebagai favorit">${isFav ? '⭐' : '☆'}</button>
+      </div>
       <div class="instansi">${escapeHtml(j.instansi)}</div>
       ${j.bidang ? `<div class="fields">${escapeHtml(j.bidang)}</div>` : ''}
       <div class="meta">
@@ -360,10 +603,11 @@ function render(){
         ${j.kuota ? `<span class="badge kuota">${j.kuota} kuota</span>` : ''}
         ${j.pendidikan ? `<span class="badge edu">${escapeHtml(j.pendidikan)}</span>` : ''}
         ${j.hari_kerja ? `<span class="badge">${j.hari_kerja} hari/minggu</span>` : ''}
+        ${peluang}
       </div>
-      <a class="btn" href="${j.href}" target="_blank" rel="noopener">Lihat Detail →</a>
+      <a class="btn" href="${j.href}" target="_blank" rel="noopener" onclick="markViewed('${j.href}')">Lihat Detail →</a>
     </div>
-  `).join('');
+  `}).join('');
 
   renderPagination(totalPages);
 }
@@ -389,6 +633,22 @@ function goPage(p){
   currentPage = p;
   render();
   window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function exportCsv(){
+  if(filtered.length === 0){ alert('Tidak ada data untuk di-export.'); return; }
+  const headers = ['Judul','Instansi','Bidang','Lokasi','Kuota','Pendidikan','Hari Kerja/Minggu','Link'];
+  const rows = filtered.map(j => [
+    j.title, j.instansi, j.bidang, j.location, j.kuota, j.pendidikan, j.hari_kerja, j.href
+  ]);
+  const csvContent = [headers, ...rows].map(row =>
+    row.map(cell => `"${String(cell ?? '').replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob(['\uFEFF' + csvContent], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lowongan_magang_kemnaker.csv';
+  a.click();
 }
 
 function escapeHtml(s){
