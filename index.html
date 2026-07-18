@@ -112,10 +112,13 @@
   }
   .dropdown-panel.open{display:block;}
   .dropdown-panel input[type=text]{
-    width:100%;
+    width:100% !important;
+    min-width:0 !important;
+    flex:none !important;
     margin-bottom:8px;
     padding:8px 10px;
     font-size:13px;
+    box-sizing:border-box;
   }
   .dropdown-panel label{
     display:flex;
@@ -127,7 +130,10 @@
     border-radius:6px;
   }
   .dropdown-panel label input[type=checkbox]{
-    flex:0 0 auto;
+    flex:0 0 auto !important;
+    width:16px !important;
+    min-width:16px !important;
+    height:16px !important;
     margin-top:2px;
   }
   .dropdown-panel label span.opt-text{
